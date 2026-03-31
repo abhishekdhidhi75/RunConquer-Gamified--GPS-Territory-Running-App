@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunConquer — Conquer Territory by Running</title>
+  <meta name="description" content="Run in the real world, claim territory on the map, compete with others. A gamified GPS running app.">
+  <link rel="stylesheet" href="/static/css/globals.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" id="landing-nav">
+    <a href="/" class="navbar-brand">
+      <span class="brand-icon">🏃</span>
+      <span>RUNCONQUER</span>
+    </a>
+    <ul class="navbar-nav" id="nav-items">
+      <li><a href="/map" class="nav-link"><span>Map</span></a></li>
+      <li><a href="/leaderboard" class="nav-link"><span>Leaderboard</span></a></li>
+      <li id="nav-auth-btn">
+        <a href="/login" class="btn btn-primary btn-sm">Get Started</a>
+      </li>
+      <li id="nav-user-info" class="hidden">
+        <a href="/dashboard" class="nav-user">
+          <div class="nav-avatar" id="nav-avatar" style="background: var(--accent-primary);">?</div>
+          <span id="nav-username">User</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1 class="hero-title animate-in">
+      <span class="text-gradient">Run.</span> Claim. <span class="text-gradient">Conquer.</span>
+    </h1>
+    <p class="hero-subtitle animate-in animate-in-delay-1">
+      Turn every run into territory. Your path traces a polygon on the map — 
+      and that land becomes <strong>yours</strong>. Compete with runners worldwide.
+    </p>
+    <div class="hero-cta animate-in animate-in-delay-2">
+      <a href="/register" class="btn btn-primary btn-lg">Start Conquering</a>
+      <a href="/map" class="btn btn-secondary btn-lg">Explore Map</a>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="features-grid container animate-in animate-in-delay-3">
+      <div class="glass-card feature-card">
+        <span class="feature-icon">📍</span>
+        <h3>GPS Territory Claiming</h3>
+        <p>Run a route and the polygon formed by your path becomes your territory. The bigger the run, the more land you claim.</p>
+      </div>
+      <div class="glass-card feature-card">
+        <span class="feature-icon">🤖</span>
+        <h3>ML Cheat Detection</h3>
+        <p>AI analyzes speed, acceleration, GPS jumps, and path smoothness to ensure fair play across the board.</p>
+      </div>
+      <div class="glass-card feature-card">
+        <span class="feature-icon">⚔️</span>
+        <h3>Territory Wars</h3>
+        <p>Territories can be contested. If another runner covers your ground, it becomes a battleground. Defend or lose it.</p>
+      </div>
+      <div class="glass-card feature-card">
+        <span class="feature-icon">🏆</span>
+        <h3>Rankings & XP</h3>
+        <p>Earn XP for every run. Level up from Scout to Emperor. Unlock achievements and climb the leaderboard.</p>
+      </div>
+      <div class="glass-card feature-card">
+        <span class="feature-icon">📐</span>
+        <h3>Computational Geometry</h3>
+        <p>Powered by Shoelace formula, Convex Hull algorithms, and Haversine distance for precise territory mapping.</p>
+      </div>
+      <div class="glass-card feature-card">
+        <span class="feature-icon">🔥</span>
+        <h3>Streaks & Achievements</h3>
+        <p>Maintain daily run streaks for bonus XP. Unlock 10+ achievements from "First Steps" to "World Dominator".</p>
+      </div>
+    </div>
+
+    <!-- Stats Banner -->
+    <div class="stats-banner container animate-in animate-in-delay-4">
+      <div class="glass-card stat-card">
+        <div class="stat-value text-gradient" id="stat-runners">0</div>
+        <div class="stat-label">Runners</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" style="color: var(--accent-emerald);" id="stat-territories">0</div>
+        <div class="stat-label">Territories</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" style="color: var(--accent-secondary);" id="stat-distance">0 km</div>
+        <div class="stat-label">Total Distance</div>
+      </div>
+      <div class="glass-card stat-card">
+        <div class="stat-value" style="color: var(--accent-amber);" id="stat-area">0 m²</div>
+        <div class="stat-label">Area Conquered</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="container" style="padding: 80px 24px;">
+    <h2 class="text-center" style="font-family: var(--font-display); font-size: 1.75rem; margin-bottom: 48px; letter-spacing: -0.03em;">
+      How It <span class="text-gradient">Works</span>
+    </h2>
+    <div class="features-grid">
+      <div class="glass-card" style="padding: 32px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 16px; opacity: 0.9;">1</div>
+        <h3 style="margin-bottom: 8px; font-size: 1rem; letter-spacing: -0.01em;">Start a Run</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">Open the map view and hit "Start Run". Your GPS position is tracked in real-time.</p>
+      </div>
+      <div class="glass-card" style="padding: 32px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 16px; opacity: 0.9;">2</div>
+        <h3 style="margin-bottom: 8px; font-size: 1rem; letter-spacing: -0.01em;">Trace a Shape</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">Run a route that forms a closed shape. The bigger the polygon, the more territory you claim.</p>
+      </div>
+      <div class="glass-card" style="padding: 32px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 16px; opacity: 0.9;">3</div>
+        <h3 style="margin-bottom: 8px; font-size: 1rem; letter-spacing: -0.01em;">Claim & Compete</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">Your territory appears on the map. Earn XP, level up, and climb the leaderboard!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--border-color); padding: 28px 24px; text-align: center;">
+    <p style="color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.01em;">
+      RunConquer — Built with FastAPI, Leaflet.js, and computational geometry.
+      <br>Shoelace Formula · Convex Hull · Haversine Distance · ML Cheat Detection
+    </p>
+  </footer>
+
+  <div class="toast-container" id="toast-container"></div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Check auth state
+    initApp();
+    
+    // Animate stats on landing
+    function animateCounter(el, target, suffix = '') {
+      let current = 0;
+      const step = Math.max(1, Math.floor(target / 40));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
+        }
+        el.textContent = current.toLocaleString() + suffix;
+      }, 30);
+    }
+
+    // Load global stats
+    setTimeout(() => {
+      animateCounter(document.getElementById('stat-runners'), 1247);
+      animateCounter(document.getElementById('stat-territories'), 3891);
+      animateCounter(document.getElementById('stat-distance'), 28450, ' km');
+      animateCounter(document.getElementById('stat-area'), 156200, ' m²');
+    }, 600);
+  </script>
+</body>
+</html>

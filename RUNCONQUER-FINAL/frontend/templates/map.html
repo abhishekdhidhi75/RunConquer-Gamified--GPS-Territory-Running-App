@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map — RunConquer</title>
+  <meta name="description" content="Interactive territory map — start runs, view conquered territory, explore the world.">
+  <link rel="stylesheet" href="/static/css/globals.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
+  <style>
+    #map-container { height: 100vh; width: 100%; z-index: 1; }
+    .map-page { position: relative; overflow: hidden; }
+    .map-navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+      height: 48px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; background: rgba(9,9,11,0.85); backdrop-filter: blur(20px) saturate(1.2);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .map-navbar .navbar-brand { font-size: 0.95rem; }
+    .map-navbar .nav-links { display: flex; gap: 4px; align-items: center; }
+    .map-navbar .nav-links a { padding: 6px 10px; font-size: 0.78rem; color: var(--text-muted); border-radius: var(--radius-sm); transition: var(--transition-fast); text-decoration: none; }
+    .map-navbar .nav-links a:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+    .run-controls {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 1001; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .run-stats-bar {
+      display: flex; gap: 24px; padding: 10px 24px; background: rgba(9,9,11,0.9);
+      backdrop-filter: blur(24px); border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+    }
+    .run-stat-mini { text-align: center; }
+    .run-stat-mini .val { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; letter-spacing: -0.03em; }
+    .run-stat-mini .lbl { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+    .run-btn-group { display: flex; gap: 8px; }
+    .btn-run-start {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--gradient-primary);
+      border: 2px solid rgba(99,102,241,0.4); font-size: 1.5rem; display: flex;
+      align-items: center; justify-content: center; cursor: pointer; color: white;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.35); transition: all var(--transition-base);
+    }
+    .btn-run-start:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(99,102,241,0.45); }
+    .btn-run-start.recording { background: var(--gradient-fire); border-color: rgba(239,68,68,0.4); box-shadow: 0 4px 20px rgba(239,68,68,0.35); animation: pulseBtn 2s infinite; }
+    @keyframes pulseBtn { 0%,100% { box-shadow: 0 4px 20px rgba(239,68,68,0.35); } 50% { box-shadow: 0 4px 28px rgba(239,68,68,0.55); } }
+    .simulation-banner {
+      position: fixed; top: 54px; left: 50%; transform: translateX(-50%);
+      z-index: 1001; padding: 5px 14px; background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.2); border-radius: var(--radius-full);
+      font-size: 0.72rem; color: var(--accent-secondary); display: none; font-weight: 500;
+    }
+    .territory-info {
+      position: fixed; top: 54px; right: 16px; z-index: 1001;
+      padding: 6px 12px; background: rgba(9,9,11,0.88); backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="map-page">
+    <!-- Compact Navbar -->
+    <div class="map-navbar">
+      <a href="/" class="navbar-brand">
+        <span class="brand-icon">🏃</span>
+        <span>RUNCONQUER</span>
+      </a>
+      <div class="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <button class="btn btn-sm btn-secondary" id="sim-toggle" onclick="toggleSimulation()" style="font-size: 0.75rem; padding: 5px 10px;">Simulate</button>
+      </div>
+    </div>
+
+    <div class="simulation-banner" id="sim-banner">SIMULATION MODE — Click on map to add run points</div>
+
+    <div class="territory-info" id="territory-info">
+      <span id="territories-count">0</span> territories on map
+    </div>
+
+    <!-- Map -->
+    <div id="map-container"></div>
+
+    <!-- Run Controls -->
+    <div class="run-controls" id="run-controls">
+      <div class="run-stats-bar" id="run-stats" style="display: none;">
+        <div class="run-stat-mini">
+          <div class="val" id="run-time" style="color: var(--accent-primary);">00:00</div>
+          <div class="lbl">Time</div>
+        </div>
+        <div class="run-stat-mini">
+          <div class="val" id="run-distance" style="color: var(--accent-emerald);">0.00</div>
+          <div class="lbl">KM</div>
+        </div>
+        <div class="run-stat-mini">
+          <div class="val" id="run-speed" style="color: var(--accent-secondary);">0.0</div>
+          <div class="lbl">KM/H</div>
+        </div>
+        <div class="run-stat-mini">
+          <div class="val" id="run-points" style="color: var(--accent-amber);">0</div>
+          <div class="lbl">Points</div>
+        </div>
+      </div>
+      <div class="run-btn-group">
+        <button class="btn-run-start" id="btn-run" onclick="toggleRun()" title="Start/Stop Run">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/geo.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    // --- State ---
+    let map, runPolyline, currentMarker;
+    let isRunning = false;
+    let isSimulation = false;
+    let runPath = [];
+    let runStartTime = null;
+    let runTimer = null;
+    let watchId = null;
+    let allTerritories = [];
+
+    // --- Initialize Map ---
+    function initMap() {
+      map = L.map('map-container', {
+        center: [28.6139, 77.2090],
+        zoom: 14,
+        zoomControl: false
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(map);
+
+      L.control.zoom({ position: 'topright' }).addTo(map);
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => map.setView([pos.coords.latitude, pos.coords.longitude], 15),
+          () => console.log('Geolocation denied, using default')
+        );
+      }
+
+      loadTerritories();
+    }
+
+    // --- Load Territories ---
+    async function loadTerritories() {
+      try {
+        const territories = await apiGet('/api/territories/all');
+        allTerritories = territories;
+        document.getElementById('territories-count').textContent = territories.length;
+
+        territories.forEach(t => {
+          if (t.polygon && t.polygon.length >= 3) {
+            const latlngs = t.polygon.map(p => [p.lat, p.lng]);
+            const poly = L.polygon(latlngs, {
+              color: t.color || '#6366f1',
+              fillColor: t.color || '#6366f1',
+              fillOpacity: 0.15,
+              weight: 2,
+              opacity: 0.5
+            }).addTo(map);
+            
+            poly.bindPopup(`
+              <div style="font-family: var(--font-body); min-width: 160px;">
+                <strong style="color: ${t.color || '#6366f1'};">${t.username}</strong>
+                <br><span style="color: #a1a1aa;">Lvl ${t.level} · ${t.rank}</span>
+                <br><span style="color: #a1a1aa;">${formatAreaDisplay(t.area_sqm)}</span>
+              </div>
+            `);
+          }
+        });
+      } catch (err) {
+        console.log('Could not load territories:', err.message);
+      }
+    }
+
+    // --- Toggle Run ---
+    function toggleRun() {
+      if (isRunning) {
+        stopRun();
+      } else {
+        startRun();
+      }
+    }
+
+    // --- Start Run ---
+    function startRun() {
+      if (!getToken()) {
+        showToast('Please login to start a run', 'error');
+        setTimeout(() => window.location.href = '/login', 1000);
+        return;
+      }
+
+      isRunning = true;
+      runPath = [];
+      runStartTime = new Date();
+
+      const btn = document.getElementById('btn-run');
+      btn.classList.add('recording');
+      btn.textContent = '⏹';
+      document.getElementById('run-stats').style.display = 'flex';
+
+      runTimer = setInterval(updateRunTimer, 1000);
+
+      runPolyline = L.polyline([], {
+        color: '#6366f1',
+        weight: 3,
+        opacity: 0.7,
+        dashArray: '8, 4'
+      }).addTo(map);
+
+      if (isSimulation) {
+        showToast('Simulation: Click on the map to add points', 'info');
+        map.on('click', onSimulationClick);
+      } else {
+        if (navigator.geolocation) {
+          watchId = navigator.geolocation.watchPosition(
+            onGPSPosition,
+            err => showToast('GPS error: ' + err.message, 'error'),
+            { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+          );
+        } else {
+          showToast('GPS not available. Use simulation mode.', 'error');
+          stopRun();
+        }
+      }
+
+      showToast('Run started — go conquer some territory!', 'success');
+    }
+
+    // --- Stop Run ---
+    async function stopRun() {
+      isRunning = false;
+
+      const btn = document.getElementById('btn-run');
+      btn.classList.remove('recording');
+      btn.textContent = '▶';
+      clearInterval(runTimer);
+      
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      
+      if (isSimulation) {
+        map.off('click', onSimulationClick);
+      }
+
+      if (runPath.length < 4) {
+        showToast('Run too short — need at least 4 GPS points', 'error');
+        document.getElementById('run-stats').style.display = 'none';
+        if (runPolyline) map.removeLayer(runPolyline);
+        return;
+      }
+
+      try {
+        showToast('Analyzing your run...', 'info');
+        const endTime = new Date();
+        const durationSecs = Math.floor((endTime - runStartTime) / 1000);
+
+        const result = await apiPost('/api/runs/submit', {
+          path: runPath.map(p => ({ lat: p[0], lng: p[1] })),
+          start_time: runStartTime.toISOString(),
+          end_time: endTime.toISOString(),
+          duration_seconds: durationSecs || 60
+        });
+
+        let msg = `Run complete! ${result.distance_km} km · +${result.xp_earned} XP`;
+        if (result.territory_claimed) {
+          msg += ` · ${formatAreaDisplay(result.area_sqm)} claimed!`;
+          
+          if (runPath.length >= 3) {
+            const hull = computeConvexHull(runPath);
+            L.polygon(hull, {
+              color: '#6366f1',
+              fillColor: '#6366f1',
+              fillOpacity: 0.2,
+              weight: 2
+            }).addTo(map);
+          }
+        }
+
+        if (!result.is_valid) {
+          msg = 'Run flagged by cheat detection (score: ' + result.cheat_analysis.cheat_score + ')';
+          showToast(msg, 'error');
+        } else {
+          showToast(msg, 'success');
+        }
+
+        if (result.achievements_unlocked && result.achievements_unlocked.length > 0) {
+          result.achievements_unlocked.forEach(a => {
+            setTimeout(() => showToast(`Achievement Unlocked: ${a.icon} ${a.name}!`, 'achievement'), 1500);
+          });
+        }
+
+      } catch (err) {
+        showToast('Failed to submit run: ' + err.message, 'error');
+      }
+
+      if (runPolyline) {
+        runPolyline.setStyle({ color: '#8b5cf6', dashArray: null, opacity: 0.4 });
+      }
+
+      document.getElementById('run-stats').style.display = 'none';
+    }
+
+    // --- GPS Position Handler ---
+    function onGPSPosition(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      addRunPoint(lat, lng);
+    }
+
+    // --- Simulation Click Handler ---
+    function onSimulationClick(e) {
+      addRunPoint(e.latlng.lat, e.latlng.lng);
+    }
+
+    // --- Add a point to the run ---
+    function addRunPoint(lat, lng) {
+      runPath.push([lat, lng]);
+      runPolyline.addLatLng([lat, lng]);
+
+      if (currentMarker) {
+        currentMarker.setLatLng([lat, lng]);
+      } else {
+        currentMarker = L.circleMarker([lat, lng], {
+          radius: 7,
+          color: '#6366f1',
+          fillColor: '#6366f1',
+          fillOpacity: 0.8,
+          weight: 2,
+          className: 'pulse-marker'
+        }).addTo(map);
+      }
+
+      const dist = calculateTotalDistance(runPath);
+      document.getElementById('run-distance').textContent = dist.toFixed(2);
+      document.getElementById('run-points').textContent = runPath.length;
+
+      if (runPath.length > 1 && runStartTime) {
+        const elapsed = (Date.now() - runStartTime.getTime()) / 1000 / 3600;
+        const speed = elapsed > 0 ? dist / elapsed : 0;
+        document.getElementById('run-speed').textContent = speed.toFixed(1);
+      }
+
+      map.panTo([lat, lng], { animate: true, duration: 0.5 });
+    }
+
+    // --- Update timer display ---
+    function updateRunTimer() {
+      if (!runStartTime) return;
+      const elapsed = Math.floor((Date.now() - runStartTime.getTime()) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      document.getElementById('run-time').textContent = 
+        String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    }
+
+    // --- Toggle Simulation Mode ---
+    function toggleSimulation() {
+      isSimulation = !isSimulation;
+      const btn = document.getElementById('sim-toggle');
+      const banner = document.getElementById('sim-banner');
+      
+      if (isSimulation) {
+        btn.textContent = 'GPS Mode';
+        btn.style.borderColor = 'var(--accent-secondary)';
+        banner.style.display = 'block';
+      } else {
+        btn.textContent = 'Simulate';
+        btn.style.borderColor = '';
+        banner.style.display = 'none';
+      }
+    }
+
+    function formatAreaDisplay(sqm) {
+      if (sqm >= 1000000) return (sqm / 1000000).toFixed(2) + ' km²';
+      if (sqm >= 10000) return (sqm / 10000).toFixed(2) + ' ha';
+      return Math.round(sqm).toLocaleString() + ' m²';
+    }
+
+    // Init
+    initMap();
+  </script>
+</body>
+</html>

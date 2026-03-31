@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — RunConquer</title>
+  <meta name="description" content="Login to RunConquer and start conquering territory.">
+  <link rel="stylesheet" href="/static/css/globals.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏃</text></svg>">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">
+      <span class="brand-icon">🏃</span>
+      <span>RUNCONQUER</span>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="/" class="nav-link"><span>Home</span></a></li>
+      <li><a href="/map" class="nav-link"><span>Map</span></a></li>
+      <li><a href="/leaderboard" class="nav-link"><span>Leaderboard</span></a></li>
+      <li><a href="/register" class="btn btn-primary btn-sm">Sign Up</a></li>
+    </ul>
+  </nav>
+
+  <div class="auth-page">
+    <div class="glass-card-static auth-card animate-in">
+      <h1><span class="text-gradient">Welcome Back</span></h1>
+      
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-username">Username</label>
+          <input class="form-input" type="text" id="login-username" placeholder="Enter your username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+        <div id="login-error" class="form-error hidden"></div>
+        <button type="submit" class="btn btn-primary" id="login-btn" style="width: 100%; margin-top: 8px;">
+          Login
+        </button>
+      </form>
+
+      <div class="auth-divider">
+        Don't have an account? <a href="/register">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (getToken()) window.location.href = '/dashboard';
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errorEl = document.getElementById('login-error');
+      errorEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      try {
+        const data = await apiPost('/api/auth/login', {
+          username: document.getElementById('login-username').value,
+          password: document.getElementById('login-password').value
+        });
+        localStorage.setItem('rc_token', data.access_token);
+        localStorage.setItem('rc_user', JSON.stringify(data.user));
+        showToast('Welcome back, ' + data.user.username + '!', 'success');
+        setTimeout(() => window.location.href = '/dashboard', 500);
+      } catch (err) {
+        errorEl.textContent = err.message || 'Login failed';
+        errorEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Login';
+      }
+    }
+  </script>
+</body>
+</html>
