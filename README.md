@@ -18,7 +18,7 @@
 
 ## 📖 About The Project
 
-FitKingdom is a **fitness gamification backend** that turns your real-world running activity into a competitive territory game on a shared world map.
+RunConquer is a **fitness gamification backend** that turns your real-world running activity into a competitive territory game on a shared world map.
 
 Most people don't exercise because there's no immediate, visible reward. FitKingdom changes that — every run you do physically grows a kingdom on a map that other players can see and attack. Your territory is always at risk. Someone nearby is running more than you right now. That urgency is the motivation.
 
