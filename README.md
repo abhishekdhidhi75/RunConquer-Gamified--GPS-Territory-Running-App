@@ -1,4 +1,5 @@
 # 🏰 RUNCONQUER
+[Live Demo](#-live-demo)
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -10,7 +11,7 @@
 **Run to conquer the map. Every kilometre you run expands your kingdom.**
 **Skip a day and it decays. Outrun your rivals to conquer their territory.**
 
-[Features](#-features) • [How It Works](#-how-it-works) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API Docs](#-api-reference) • [Roadmap](#-roadmap)
+ •[Features](#-features) • [How It Works](#-how-it-works) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [API Docs](#-api-reference) • [Roadmap](#-roadmap)
 
 </div>
 
@@ -18,7 +19,7 @@
 
 ## 📖 About The Project
 
-RunConquer is a **fitness gamification backend** that turns your real-world running activity into a competitive territory game on a shared world map.
+ RunConquer is a **fitness gamification backend** that turns your real-world running activity into a competitive territory game on a shared world map.
 
 Most people don't exercise because there's no immediate, visible reward. FitKingdom changes that — every run you do physically grows a kingdom on a map that other players can see and attack. Your territory is always at risk. Someone nearby is running more than you right now. That urgency is the motivation.
 
@@ -31,6 +32,18 @@ This project was built as a college placement portfolio piece to demonstrate:
 - Background job scheduling
 - JWT-based authentication
 - Clean project architecture
+
+---
+
+## 🎬 Live Demo
+
+🚀 **API Live URL:**  
+**https://runconquer-gamified-gps-territory.onrender.com/**
+
+📖 **Interactive Swagger Docs (try every endpoint in your browser):**  
+**https://runconquer-gamified-gps-territory.onrender.com/docs**
+
+> No setup needed — open the Swagger UI, click **Register**, log a run, and watch your territory expand on the leaderboard instantly.
 
 ---
 
